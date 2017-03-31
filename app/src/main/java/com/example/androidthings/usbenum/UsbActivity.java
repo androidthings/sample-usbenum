@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017, The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.androidthings.usbenum;
 
 import android.app.Activity;
@@ -123,18 +139,26 @@ public class UsbActivity extends Activity {
      * @param device USB device to query.
      */
     private void printDeviceDetails(UsbDevice device) {
-        byte[] buffer;
         UsbDeviceConnection connection = mUsbManager.openDevice(device);
 
-        //Parse the raw device descriptor
-        buffer = UsbHelper.DeviceDescriptor.executeRequest(connection);
-        String deviceDescription = UsbHelper.DeviceDescriptor.parseResponse(buffer);
-
-        //Parse the raw configuration descriptor
-        buffer = UsbHelper.ConfigurationDescriptor.executeRequest(connection);
-        String configDescription = UsbHelper.ConfigurationDescriptor.parseResponse(buffer);
-
-        printResult(deviceDescription + "\n\n" + configDescription);
+        String deviceString, configString;
+        try {
+            //Parse the raw device descriptor
+            deviceString = DeviceDescriptor.fromDeviceConnection(connection)
+                    .toString();
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Unable to read device descriptor", e);
+            deviceString = "";
+        }
+        try {
+            //Parse the raw configuration descriptor
+            configString = ConfigurationDescriptor.fromDeviceConnection(connection)
+                    .toString();
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Unable to read config descriptor", e);
+            configString = "";
+        }
+        printResult(deviceString + "\n\n" + configString);
 
         connection.close();
     }

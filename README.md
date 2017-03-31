@@ -1,7 +1,7 @@
 USB Enumerator Sample
 =====================
 This application demonstrates accessing the `UsbManager` Android API from within
-and Android Things application. The sample application iterates over all the
+an Android Things application. The sample application iterates over all the
 USB devices discovered by the host and prints their interfaces and endpoints.
 
 Pre-requisites
