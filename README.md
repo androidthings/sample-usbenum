@@ -1,17 +1,15 @@
-USB Enumerator Sample
-=====================
+# USB Enumerator Sample
+
 This application demonstrates accessing the `UsbManager` Android API from within
 an Android Things application. The sample application iterates over all the
 USB devices discovered by the host and prints their interfaces and endpoints.
 
-Pre-requisites
---------------
+## Pre-requisites
 
 - Android Things compatible board
 - Android Studio 2.2+
 
-Getting Started
----------------
+## Getting Started
 
 Import the project using Android Studio and deploy it to your device. The
 application prints the list of connected USB devices. Connect any USB peripheral
@@ -19,8 +17,7 @@ to one of the host ports on your device. The application connects to that
 specific device, parses its descriptors, and prints out more detailed information
 about its configuration.
 
-Behavior Differences
---------------------
+## Behavior Differences
 
 The Android [USB Host](https://developer.android.com/guide/topics/connectivity/usb/host.html)
 APIs behave differently on Android Things because user-granted permission dialogs
@@ -28,8 +25,7 @@ are not enabled. This sample takes these changes into account, and does not
 request device access permissions that would otherwise be required on an Android
 mobile device.
 
-License
--------
+## License
 
 Copyright 2017 The Android Open Source Project, Inc.
 
