@@ -41,7 +41,8 @@ public class DeviceDescriptor {
     /**
      * Request the device descriptor through the USB device connection.
      */
-    public static DeviceDescriptor fromDeviceConnection(UsbDeviceConnection connection) {
+    public static DeviceDescriptor fromDeviceConnection(UsbDeviceConnection connection)
+            throws IllegalArgumentException {
         byte[] buffer = new byte[LENGTH];
 
         connection.controlTransfer(REQUEST_TYPE, REQUEST, REQ_VALUE, REQ_INDEX,

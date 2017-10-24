@@ -19,6 +19,9 @@ package com.example.androidthings.usbenum;
 import android.hardware.usb.UsbDeviceConnection;
 import android.util.Log;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -38,28 +41,34 @@ public class ConfigurationDescriptor {
     //  Descriptor Index = 0x0 (First configuration)
     private static final int REQ_VALUE = 0x200;
     private static final int REQ_INDEX = 0x00;
-    private static final int LENGTH = 64;
+    private static final int LENGTH = 9;
     private static final int TIMEOUT = 2000;
 
     /**
      * Request the active configuration descriptor through the USB device connection.
      */
-    public static ConfigurationDescriptor fromDeviceConnection(UsbDeviceConnection connection) {
+    public static ConfigurationDescriptor fromDeviceConnection(UsbDeviceConnection connection)
+            throws IllegalArgumentException, ParseException {
         //Create a sufficiently large buffer for incoming data
         byte[] buffer = new byte[LENGTH];
 
         connection.controlTransfer(REQUEST_TYPE, REQUEST, REQ_VALUE, REQ_INDEX,
                 buffer, LENGTH, TIMEOUT);
 
+        //Do a short read to determine descriptor length
+        int totalLength = headerLengthCheck(buffer);
+        //Obtain the full descriptor
+        buffer = new byte[totalLength];
+        connection.controlTransfer(REQUEST_TYPE, REQUEST, REQ_VALUE, REQ_INDEX,
+                buffer, totalLength, TIMEOUT);
+
         return parseResponse(buffer);
     }
 
     /**
-     * Parse the USB configuration descriptor response per the USB Specification.
-     *
-     * @param buffer Raw configuration descriptor from the device.
+     * Verify the buffers represents a proper descriptor, and return the length
      */
-    private static ConfigurationDescriptor parseResponse(byte[] buffer) {
+    private static int headerLengthCheck(byte[] buffer) {
         if (buffer[0] != UsbHelper.DESC_SIZE_CONFIG || buffer[1] != UsbHelper.DESC_TYPE_CONFIG) {
             throw new IllegalArgumentException("Invalid configuration descriptor");
         }
@@ -67,10 +76,17 @@ public class ConfigurationDescriptor {
         // Parse configuration descriptor header
         int totalLength = (buffer[3] & 0xFF) << 8;
         totalLength += (buffer[2] & 0xFF);
-        if (buffer.length < totalLength) {
-            Log.w(TAG, "Incomplete configuration descriptor. Expected "  + totalLength
-                    + " but received " + buffer.length);
-        }
+
+        return totalLength;
+    }
+
+    /**
+     * Parse the USB configuration descriptor response per the USB Specification.
+     *
+     * @param buffer Raw configuration descriptor from the device.
+     */
+    private static ConfigurationDescriptor parseResponse(byte[] buffer) throws ParseException {
+        int totalLength = headerLengthCheck(buffer);
 
         // Interface count
         int interfaceCount = (buffer[4] & 0xFF);
@@ -84,13 +100,10 @@ public class ConfigurationDescriptor {
 
         // The rest of the descriptor is interfaces and endpoints
         int index = UsbHelper.DESC_SIZE_CONFIG;
-        int intfIdx, endptIdx;
-        intfIdx = endptIdx = 0;
         InterfaceInfo nextInterface = null;
         while (index < totalLength) {
             if (index >= buffer.length) {
-                Log.w(TAG, "Prematurely reached descriptor end. Returning partial data.");
-                break;
+                throw new ParseException("Prematurely reached descriptor end.", index);
             }
 
             //Read length and type
@@ -98,12 +111,10 @@ public class ConfigurationDescriptor {
             int type = (buffer[index + 1] & 0xFF);
             switch (type) {
                 case UsbHelper.DESC_TYPE_INTERFACE:
-                    if (len != UsbHelper.DESC_SIZE_INTERFACE) {
-                        Log.w(TAG, "Invalid interface descriptor length. Returning partial data.");
-                        break;
+                    if (len < UsbHelper.DESC_SIZE_INTERFACE) {
+                        throw new ParseException("Invalid interface descriptor length.", index);
                     }
 
-                    endptIdx = 0;
                     int intfId = (buffer[index + 2] & 0xFF);
                     int intfEndpointCount = (buffer[index + 4] & 0xFF);
                     int intfClass = (buffer[index + 5] & 0xFF);
@@ -112,13 +123,12 @@ public class ConfigurationDescriptor {
 
                     nextInterface =
                             new InterfaceInfo(intfId, intfEndpointCount, intfClass, intfSubclass, intfProtocol);
-                    descriptor.interfaces[intfIdx++] = nextInterface;
+                    descriptor.interfaces.add(nextInterface);
 
                     break;
                 case UsbHelper.DESC_TYPE_ENDPOINT:
-                    if (len != UsbHelper.DESC_SIZE_ENDPOINT) {
-                        Log.w(TAG, "Invalid endpoint descriptor length. Returning partial data.");
-                        break;
+                    if (len < UsbHelper.DESC_SIZE_ENDPOINT) {
+                        throw new ParseException("Invalid endpoint descriptor length.", index);
                     }
 
                     int endpointAddr = ((buffer[index + 2] & 0xFF));
@@ -128,8 +138,8 @@ public class ConfigurationDescriptor {
 
                     int epInterval = (buffer[index + 6] & 0xFF);
 
-                    nextInterface.endpoints[endptIdx++] =
-                            new EndpointInfo(endpointAddr, endpointAttrs, maxPacketSize, epInterval);
+                    nextInterface.endpoints.add(
+                            new EndpointInfo(endpointAddr, endpointAttrs, maxPacketSize, epInterval));
                     break;
             }
             //Advance to next descriptor
@@ -145,11 +155,11 @@ public class ConfigurationDescriptor {
     public final boolean selfPowered;
     public final boolean remoteWakeup;
     public final int maxPower;
-    public InterfaceInfo[] interfaces;
+    public List<InterfaceInfo> interfaces;
 
     public ConfigurationDescriptor(int interfaceCount, int attributes, int maxPower) {
         this.interfaceCount = interfaceCount;
-        this.interfaces = new InterfaceInfo[interfaceCount];
+        this.interfaces = new ArrayList<>(interfaceCount);
         this.busPowered = (attributes & UsbHelper.ATTR_BUSPOWER) == UsbHelper.ATTR_BUSPOWER;
         this.selfPowered = (attributes & UsbHelper.ATTR_SELFPOWER) == UsbHelper.ATTR_SELFPOWER;
         this.remoteWakeup = (attributes & UsbHelper.ATTR_REMOTEWAKE) == UsbHelper.ATTR_REMOTEWAKE;
@@ -193,7 +203,7 @@ public class ConfigurationDescriptor {
         public final int interfaceClass;
         public final int interfaceSubclass;
         public final int interfaceProtocol;
-        public final EndpointInfo[] endpoints;
+        public final List<EndpointInfo> endpoints;
 
         public InterfaceInfo(int id, int endpointCount,
                              int interfaceClass, int interfaceSubclass, int interfaceProtocol) {
@@ -202,7 +212,7 @@ public class ConfigurationDescriptor {
             this.interfaceClass = interfaceClass;
             this.interfaceSubclass = interfaceSubclass;
             this.interfaceProtocol = interfaceProtocol;
-            this.endpoints = new EndpointInfo[endpointCount];
+            this.endpoints = new ArrayList<>(endpointCount);
         }
 
         @Override

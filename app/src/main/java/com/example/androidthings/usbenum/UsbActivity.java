@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.text.ParseException;
 import java.util.HashMap;
 
 public class UsbActivity extends Activity {
@@ -141,25 +142,27 @@ public class UsbActivity extends Activity {
     private void printDeviceDetails(UsbDevice device) {
         UsbDeviceConnection connection = mUsbManager.openDevice(device);
 
-        String deviceString, configString;
+        String deviceString = "";
         try {
             //Parse the raw device descriptor
             deviceString = DeviceDescriptor.fromDeviceConnection(connection)
                     .toString();
         } catch (IllegalArgumentException e) {
-            Log.w(TAG, "Unable to read device descriptor", e);
-            deviceString = "";
+            Log.w(TAG, "Invalid device descriptor", e);
         }
+
+        String configString = "";
         try {
             //Parse the raw configuration descriptor
             configString = ConfigurationDescriptor.fromDeviceConnection(connection)
                     .toString();
         } catch (IllegalArgumentException e) {
-            Log.w(TAG, "Unable to read config descriptor", e);
-            configString = "";
+            Log.w(TAG, "Invalid config descriptor", e);
+        } catch (ParseException e) {
+            Log.w(TAG, "Unable to parse config descriptor", e);
         }
-        printResult(deviceString + "\n\n" + configString);
 
+        printResult(deviceString + "\n\n" + configString);
         connection.close();
     }
 
