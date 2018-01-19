@@ -4,6 +4,12 @@ This application demonstrates accessing the `UsbManager` Android API from within
 an Android Things application. The sample application iterates over all the
 USB devices discovered by the host and prints their interfaces and endpoints.
 
+## Screenshots
+
+![USB Enumerator sample demo][demo-gif]
+
+[(Watch the demo on YouTube)][demo-yt]
+
 ## Pre-requisites
 
 - Android Things compatible board
@@ -43,3 +49,6 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
 License for the specific language governing permissions and limitations under
 the License.
+
+[demo-yt]: https://www.youtube.com/watch?v=5V3nDxJ7GUk&list=PLWz5rJ2EKKc-GjpNkFe9q3DhE2voJscDT&index=13
+[demo-gif]: demo1.gif
