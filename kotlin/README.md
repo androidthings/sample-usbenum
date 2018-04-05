@@ -31,6 +31,24 @@ are not enabled. This sample takes these changes into account, and does not
 request device access permissions that would otherwise be required on an Android
 mobile device.
 
+## Enable auto-launch behavior
+
+This sample app is currently configured to launch only when deployed from your
+development machine. To enable the main activity to launch automatically on boot,
+add the following `intent-filter` to the app's manifest file:
+
+```xml
+<activity ...>
+
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.HOME"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter>
+
+</activity>
+```
+
 ## License
 
 Copyright 2017 The Android Open Source Project, Inc.
