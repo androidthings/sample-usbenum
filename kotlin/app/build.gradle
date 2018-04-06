@@ -18,7 +18,6 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.2'
     defaultConfig {
         applicationId "com.example.androidthings.usbenum"
         minSdkVersion 27
