@@ -144,8 +144,8 @@ private const val TIMEOUT = 2000
  * Verify the buffers represents a proper descriptor, and return the length
  */
 private fun headerLengthCheck(buffer: ByteArray): Int {
-    require(buffer[0] != UsbHelper.DESC_SIZE_CONFIG
-            || buffer[1] != UsbHelper.DESC_TYPE_CONFIG) {
+    require(buffer[0] == UsbHelper.DESC_SIZE_CONFIG
+            && buffer[1] == UsbHelper.DESC_TYPE_CONFIG) {
         "Invalid configuration descriptor"
     }
 
