@@ -19,7 +19,6 @@ package com.example.androidthings.usbenum
 import android.hardware.usb.UsbDeviceConnection
 
 import java.text.ParseException
-import java.util.ArrayList
 import java.util.Locale
 
 /**
@@ -28,9 +27,9 @@ import java.util.Locale
  */
 data class ConfigurationDescriptor(val interfaceCount: Int, val attributes: Int, val maxPower: Int) {
 
-    val busPowered = (attributes and UsbHelper.ATTR_BUSPOWER) == UsbHelper.ATTR_BUSPOWER
-    val selfPowered = (attributes and UsbHelper.ATTR_SELFPOWER) == UsbHelper.ATTR_SELFPOWER
-    val remoteWakeup = (attributes and UsbHelper.ATTR_REMOTEWAKE) == UsbHelper.ATTR_REMOTEWAKE
+    private val busPowered = (attributes and UsbHelper.ATTR_BUSPOWER) == UsbHelper.ATTR_BUSPOWER
+    private val selfPowered = (attributes and UsbHelper.ATTR_SELFPOWER) == UsbHelper.ATTR_SELFPOWER
+    private val remoteWakeup = (attributes and UsbHelper.ATTR_REMOTEWAKE) == UsbHelper.ATTR_REMOTEWAKE
 
     var interfaces = mutableListOf<InterfaceInfo>()
 
@@ -38,11 +37,11 @@ data class ConfigurationDescriptor(val interfaceCount: Int, val attributes: Int,
      * Structured USB interface representation
      */
     class InterfaceInfo(
-            val id: Int,
-            val endpointCount: Int,
-            val interfaceClass: Int,
-            val interfaceSubclass: Int,
-            val interfaceProtocol: Int
+            private val id: Int,
+            private val endpointCount: Int,
+            private val interfaceClass: Int,
+            private val interfaceSubclass: Int,
+            private val interfaceProtocol: Int
     ) {
         val endpoints = mutableListOf<EndpointInfo>()
 
@@ -61,15 +60,14 @@ data class ConfigurationDescriptor(val interfaceCount: Int, val attributes: Int,
     class EndpointInfo(
             address: Int,
             attributes: Int,
-            val maxPacketSize: Int,
-            val interval: Int
+            private val maxPacketSize: Int
     ) {
         // Number is lower 4 bits
-        val id: Int = address and 0x0F
+        private val id: Int = address and 0x0F
         // Direction is high bit
-        val direction: Int = address and 0x80
+        private val direction: Int = address and 0x80
         // Type is the lower two bits
-        val type: Int = attributes and 0x3
+        private val type: Int = attributes and 0x3
 
         override fun toString() = String.format(Locale.US,
                 "   -- Endpoint %d, %s %s, %d byte packets\n",
@@ -209,11 +207,11 @@ private fun parseResponse(buffer: ByteArray): ConfigurationDescriptor {
                 var maxPacketSize = buffer[index + 5].toPositiveInt() shl 8
                 maxPacketSize += buffer[index + 4].toPositiveInt()
 
-                val epInterval = buffer[index + 6].toPositiveInt()
+                buffer[index + 6].toPositiveInt()
 
                 val currentInterface = descriptor.interfaces.last()
                 currentInterface.endpoints.add(
-                        ConfigurationDescriptor.EndpointInfo(endpointAddr, endpointAttrs, maxPacketSize, epInterval))
+                        ConfigurationDescriptor.EndpointInfo(endpointAddr, endpointAttrs, maxPacketSize))
             }
         }
         // Advance to next descriptor
