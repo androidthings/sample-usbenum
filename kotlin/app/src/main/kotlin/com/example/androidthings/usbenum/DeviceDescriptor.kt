@@ -76,8 +76,8 @@ private const val TIMEOUT = 2000
  * @param buffer Raw configuration descriptor from the device.
  */
 private fun parseResponse(buffer: ByteArray): DeviceDescriptor {
-    require(buffer[0] != UsbHelper.DESC_SIZE_DEVICE
-            || buffer[1] != UsbHelper.DESC_TYPE_DEVICE) {
+    require(buffer[0] == UsbHelper.DESC_SIZE_DEVICE
+            && buffer[1] == UsbHelper.DESC_TYPE_DEVICE) {
         "Invalid device descriptor"
     }
 
