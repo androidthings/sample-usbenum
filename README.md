@@ -4,6 +4,10 @@ This application demonstrates accessing the `UsbManager` Android API from within
 an Android Things application. The sample application iterates over all the
 USB devices discovered by the host and prints their interfaces and endpoints.
 
+> **Note:** The Android Things Console will be turned down for non-commercial
+> use on January 5, 2022. For more details, see the
+> [FAQ page](https://developer.android.com/things/faq).
+
 ## Screenshots
 
 ![USB Enumerator sample demo][demo-gif]
